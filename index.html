@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История Артема и Вероники</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            color: #fff;
+        }
+        .screen {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 30%, #16213e 0%, #0f0f1a 100%);
+        }
+
+        /* === КНОПКА СТАРТА === */
+        .start-screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            background: #0f0f1a;
+            transition: opacity 0.8s ease;
+        }
+        .start-screen.hidden { opacity: 0; pointer-events: none; }
+        .start-title {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: #e0c3fc;
+            margin-bottom: 40px;
+            text-shadow: 0 0 20px rgba(224, 195, 252, 0.3);
+        }
+        .start-btn {
+            padding: 16px 50px;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            color: #fff;
+            background: transparent;
+            border: 1px solid #e0c3fc;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+        }
+        .start-btn:hover {
+            background: #e0c3fc;
+            color: #0f0f1a;
+            box-shadow: 0 0 30px rgba(224, 195, 252, 0.5);
+        }
+
+        /* === СЦЕНА === */
+        .scene {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+        .scene.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .scene-bg {
+            position: absolute;
+            inset: 0;
+            transition: background 1.5s ease;
+        }
+
+        /* Фигуры персонажей */
+        .figure {
+            position: absolute;
+            width: 40px;
+            height: 80px;
+            border-radius: 20px 20px 5px 5px;
+            transition: all 1.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 5px;
+        }
+        .figure .name {
+            position: absolute;
+            bottom: -28px;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            opacity: 0.9;
+        }
+        .figure .head {
+            position: absolute;
+            top: -22px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            transition: background 1.5s ease;
+        }
+
+        /* Артем — богатый */
+        .artem {
+            background: linear-gradient(180deg, #2c2c54 0%, #1e1e3a 100%);
+        }
+        .artem .head {
+            background: #3a3a6a;
+        }
+        .artem .name { color: #a29bfe; }
+
+        /* Вероника — сначала бедная */
+        .veronika {
+            background: linear-gradient(180deg, #5c4b51 0%, #3d3237 100%);
+        }
+        .veronika .head {
+            background: #6b5a60;
+        }
+        .veronika .name { color: #b8a9b0; }
+
+        /* Вероника — богатая (после свадьбы) */
+        .veronika.rich {
+            background: linear-gradient(180deg, #e0c3fc 0%, #8ec5fc 100%);
+        }
+        .veronika.rich .head {
+            background: #f0e6ff;
+        }
+        .veronika.rich .name { color: #e0c3fc; }
+
+        /* Декорации */
+        .city {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40%;
+            background: linear-gradient(0deg, #0a0a14 0%, transparent 100%);
+            z-index: 1;
+        }
+        .building {
+            position: absolute;
+            bottom: 0;
+            background: #141428;
+            border-top: 2px solid #2a2a4a;
+        }
+        .car {
+            position: absolute;
+            width: 80px;
+            height: 30px;
+            border-radius: 8px 15px 5px 5px;
+            bottom: 12%;
+            transition: all 1.5s ease;
+            z-index: 5;
+        }
+        .car::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            width: 40px;
+            height: 12px;
+            border-radius: 6px 6px 0 0;
+            background: inherit;
+            filter: brightness(1.3);
+        }
+        .car.luxury {
+            background: linear-gradient(180deg, #c9a0dc 0%, #8e44ad 100%);
+            box-shadow: 0 0 20px rgba(201, 160, 220, 0.5);
+        }
+
+        /* Текстовое описание сцены */
+        .caption {
+            position: absolute;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.1rem;
+            color: #b8b8d0;
+            letter-spacing: 1px;
+            text-align: center;
+            max-width: 80%;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+            z-index: 50;
+            pointer-events: none;
+            line-height: 1.6;
+        }
+        .caption.show { opacity: 1; }
+
+        /* Сцена 1: Богатый Артем */
+        .scene-1 .scene-bg {
+            background: radial-gradient(circle at 30% 40%, #1a1a3e 0%, #0a0a14 100%);
+        }
+
+        /* Сцена 2: Вероника в другом городе */
+        .scene-2 .scene-bg {
+            background: radial-gradient(circle at 70% 60%, #1f1a1e 0%, #0a0a0a 100%);
+        }
+
+        /* Сцена 3: Приезд Вероники */
+        .scene-3 .scene-bg {
+            background: radial-gradient(circle at 50% 50%, #1a2a3e 0%, #0a0a14 100%);
+        }
+
+        /* Сцена 4: Артем приглашает на работу */
+        .scene-4 .scene-bg {
+            background: radial-gradient(circle at 40% 40%, #2a1a2e 0%, #0f0a14 100%);
+        }
+
+        /* Сцена 5: Ночь */
+        .scene-5 .scene-bg {
+            background: radial-gradient(circle at 50% 20%, #0f0a1a 0%, #050510 100%);
+        }
+
+        /* Сцена 6: Свадьба */
+        .scene-6 .scene-bg {
+            background: radial-gradient(circle at 50% 40%, #3e2a4e 0%, #1a0f2e 100%);
+        }
+
+        /* Анимация для сцены 5 (ночь) */
+        .scene-5 .figure {
+            transition: all 3s ease;
+        }
+
+        .skip-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid #555;
+            color: #888;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+        .skip-btn:hover {
+            border-color: #e0c3fc;
+            color: #e0c3fc;
+        }
+        .skip-btn.hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="screen" id="screen">
+        <!-- Экран старта -->
+        <div class="start-screen" id="startScreen">
+            <div class="start-title">ИСТОРИЯ</div>
+            <button class="start-btn" id="startBtn">Начать просмотр жизни</button>
+        </div>
+
+        <!-- Кнопка пропуска -->
+        <button class="skip-btn hidden" id="skipBtn">Пропустить →</button>
+
+        <!-- Сцены -->
+        <div class="scene scene-1" id="scene1">
+            <div class="scene-bg"></div>
+            <div class="city" id="city1"></div>
+            <div class="car luxury" id="car1" style="left: 15%;"></div>
+            <div class="figure artem" id="artem1" style="left: 30%; bottom: 20%;">
+                <div class="head"></div>
+                <div class="name">Артем</div>
+            </div>
+            <div class="caption" id="cap1">Артем. Богатый город. Дорогие машины. Все двери открыты.</div>
+        </div>
+
+        <div class="scene scene-2" id="scene2">
+            <div class="scene-bg"></div>
+            <div class="city" id="city2"></div>
+            <div class="figure veronika" id="veronika2" style="left: 60%; bottom: 20%;">
+                <div class="head"></div>
+                <div class="name">Вероника</div>
+            </div>
+            <div class="caption" id="cap2">Вероника. Другой город. Пустая квартира, пустой холодильник.</div>
+        </div>
+
+        <div class="scene scene-3" id="scene3">
+            <div class="scene-bg"></div>
+            <div class="city" id="city3"></div>
+            <div class="figure artem" id="artem3" style="left: 25%; bottom: 25%;">
+                <div class="head"></div>
+                <div class="name">Артем</div>
+            </div>
+            <div class="figure veronika" id="veronika3" style="left: 70%; bottom: 25%;">
+                <div class="head"></div>
+                <div class="name">Вероника</div>
+            </div>
+            <div class="caption" id="cap3">Вероника приезжает в город Артема по работе. Случайная встреча.</div>
+        </div>
+
+        <div class="scene scene-4" id="scene4">
+            <div class="scene-bg"></div>
+            <div class="city" id="city4"></div>
+            <div class="figure artem" id="artem4" style="left: 35%; bottom: 30%;">
+                <div class="head"></div>
+                <div class="name">Артем</div>
+            </div>
+            <div class="figure veronika" id="veronika4" style="left: 55%; bottom: 30%;">
+                <div class="head"></div>
+                <div class="name">Вероника</div>
+            </div>
+            <div class="caption" id="cap4">Артем предлагает Веронике работу горничной в своем доме. Она соглашается.</div>
+        </div>
+
+        <div class="scene scene-5" id="scene5">
+            <div class="scene-bg"></div>
+            <div class="city" id="city5"></div>
+            <div class="figure artem" id="artem5" style="left: 30%; bottom: 30%;">
+                <div class="head"></div>
+                <div class="name">Артем</div>
+            </div>
+            <div class="figure veronika" id="veronika5" style="left: 60%; bottom: 30%;">
+                <div class="head"></div>
+                <div class="name">Вероника</div>
+            </div>
+            <div class="caption" id="cap5">Ночь. Тишина. Между ними что-то происходит.</div>
+        </div>
+
+        <div class="scene scene-6" id="scene6">
+            <div class="scene-bg"></div>
+            <div class="city" id="city6"></div>
+            <div class="figure artem" id="artem6" style="left: 42%; bottom: 30%;">
+                <div class="head"></div>
+                <div class="name">Артем</div>
+            </div>
+            <div class="figure veronika rich" id="veronika6" style="left: 52%; bottom: 30%;">
+                <div class="head"></div>
+                <div class="name">Вероника</div>
+            </div>
+            <div class="caption" id="cap6">Прошло время. Они женятся. Вероника больше не бомжует.</div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+        const skipBtn = document.getElementById('skipBtn');
+
+        let started = false;
+        let currentScene = 0;
+        let timeouts = [];
+
+        // Функция для безопасной задержки с сохранением таймеров
+        function delay(ms, fn) {
+            const id = setTimeout(fn, ms);
+            timeouts.push(id);
+            return id;
+        }
+
+        // Очистка таймеров при пропуске
+        function clearAllTimeouts() {
+            timeouts.forEach(id => clearTimeout(id));
+            timeouts = [];
+        }
+
+        // Переключение сцены
+        function showScene(num) {
+            document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+            const scene = document.getElementById('scene' + num);
+            if (scene) scene.classList.add('active');
+            currentScene = num;
+        }
+
+        // Показать подпись
+        function showCaption(num) {
+            const cap = document.getElementById('cap' + num);
+            if (cap) cap.classList.add('show');
+        }
+
+        // Создание декораций города
+        function buildCity(containerId, count = 8) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const b = document.createElement('div');
+                b.className = 'building';
+                const w = 40 + Math.random() * 80;
+                const h = 40 + Math.random() * 150;
+                b.style.width = w + 'px';
+                b.style.height = h + 'px';
+                b.style.left = (i * (100 / count) + Math.random() * 5) + '%';
+                b.style.opacity = 0.3 + Math.random() * 0.4;
+                container.appendChild(b);
+            }
+        }
+
+        // === ЗАПУСК ИСТОРИИ ===
+        function startStory() {
+            if (started) return;
+            started = true;
+            startScreen.classList.add('hidden');
+            skipBtn.classList.remove('hidden');
+
+            // Строим города
+            for (let i = 1; i <= 6; i++) buildCity('city' + i, 6 + i);
+
+            // Сцена 1: Артем богатый
+            showScene(1);
+            delay(500, () => {
+                showCaption(1);
+                // Машина едет
+                const car = document.getElementById('car1');
+                if (car) {
+                    car.style.left = '70%';
+                }
+            });
+
+            // Сцена 2: Вероника бедная
+            delay(4000, () => {
+                showScene(2);
+                delay(500, () => showCaption(2));
+            });
+
+            // Сцена 3: Приезд
+            delay(8000, () => {
+                showScene(3);
+                delay(500, () => {
+                    showCaption(3);
+                    // Вероника приближается к Артему
+                    const v = document.getElementById('veronika3');
+                    if (v) v.style.left = '45%';
+                });
+            });
+
+            // Сцена 4: Приглашение на работу
+            delay(13000, () => {
+                showScene(4);
+                delay(500, () => {
+                    showCaption(4);
+                    // Артем приближается к Веронике
+                    const a = document.getElementById('artem4');
+                    if (a) a.style.left = '45%';
+                });
+            });
+
+            // Сцена 5: Ночь
+            delay(18000, () => {
+                showScene(5);
+                delay(500, () => {
+                    showCaption(5);
+                    // Они сближаются
+                    const a = document.getElementById('artem5');
+                    const v = document.getElementById('veronika5');
+                    if (a) a.style.left = '40%';
+                    if (v) v.style.left = '45%';
+                });
+            });
+
+            // Сцена 6: Свадьба
+            delay(25000, () => {
+                showScene(6);
+                delay(500, () => {
+                    showCaption(6);
+                    // Они вместе
+                    const a = document.getElementById('artem6');
+                    const v = document.getElementById('veronika6');
+                    if (a) a.style.left = '44%';
+                    if (v) v.style.left = '48%';
+                });
+            });
+
+            // Конец — скрываем кнопку пропуска
+            delay(32000, () => {
+                skipBtn.classList.add('hidden');
+            });
+        }
+
+        // === ПРОПУСК ===
+        function skipToEnd() {
+            clearAllTimeouts();
+            // Переключаем на последнюю сцену
+            showScene(6);
+            showCaption(6);
+            // Ставим фигуры в финальную позицию
+            const a = document.getElementById('artem6');
+            const v = document.getElementById('veronika6');
+            if (a) a.style.left = '44%';
+            if (v) {
+                v.style.left = '48%';
+                v.classList.add('rich');
+            }
+            skipBtn.classList.add('hidden');
+        }
+
+        startBtn.addEventListener('click', startStory);
+        skipBtn.addEventListener('click', skipToEnd);
+    })();
+    </script>
+</body>
+  </html>
